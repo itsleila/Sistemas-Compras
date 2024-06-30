@@ -1,0 +1,150 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,200;0,300;0,400;0,500;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+* {
+  box-sizing: border-box;
+  color: #1c2027;
+  line-height: 1.7;
+  font-weight: 400;
+  font-family: "Roboto", sans-serif;
+}
+
+ul,
+li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+}
+
+.header-div {
+  @apply flex justify-between items-center p-3 mb-2; 
+}
+
+.nav-div {
+  @apply flex justify-around p-2 my-4 bg-blue-ribbon; 
+}
+
+.nav-link {
+  @apply text-gray-one m-2 text-sm font-semibold hover:text-base hover:text-white transition-transform duration-300;
+}
+.nav-link:hover {
+  @apply scale-105 text-white;
+}
+
+.paragrafo-azul{
+  @apply text-blue-ribbon text-center font-medium font-text-body px-2 m-1;
+}
+
+.paragrafo-descricao{
+  @apply px-2 m-1 font-light text-center text-sm font-text-body;
+}
+
+.home-titulo{
+  @apply  text-4xl font-medium font-text-body text-center p-3;
+}
+
+.home-titulo span{
+  @apply text-blue-ribbon font-text-body text-center font-medium ;
+}
+
+.authForm-container{
+  @apply  flex flex-col items-center justify-center mb-5;
+}
+.authForm-title{
+  @apply text-4xl font-bold mb-1 font-serif tracking-wide p-2 text-center text-blue-ribbon;
+}
+
+.authForm-div{
+  @apply  p-5 rounded-lg shadow-lg w-full max-w-md;
+}
+
+.authForm-form{
+  @apply w-full max-w-lg p-6
+}
+
+.label-form{
+  @apply block text-gray-700 text-sm font-bold mb-2
+}
+.input-form{
+  @apply appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded-xl py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-blue-400
+}
+
+.formLink{
+  @apply inline-block mt-3 text-center align-baseline font-semibold text-base italic text-blue-500 hover:text-blue-800;
+}
+
+.FormConfirmation-message{
+  @apply text-green-500 text-xs italic;
+}
+
+.FormError-message{
+  @apply text-red-500 text-xs italic;
+}
+
+
+.painel-title{
+  @apply text-2xl font-bold tracking-wide px-2;
+}
+
+.modal-title{
+  @apply text-lg font-bold tracking-wide text-center;
+}
+
+.painel-paragrafo{
+  @apply  font-thin text-sm font-text-body p-2;
+}
+
+.modal-paragrafo{
+  @apply  font-medium text-lg font-text-body ;
+}
+
+.search-div {
+  @apply max-w-72 flex items-center min-w-min border border-gray-400 rounded-xl p-2 mx-5 mb-3 cursor-text;
+}
+
+.search-div:focus-within {
+  @apply border-blue-600;
+}
+
+.search-input {
+  @apply ml-4 text-gray-700 focus:outline-none flex-grow;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.registerForm-title{
+  @apply text-lg font-bold mb-2 p-2;
+}
+
+.registerForm-div{
+  @apply  flex flex-col items-center justify-center my-5;
+}
+
+.label-Registerform{
+  @apply block text-gray-950 text-sm font-bold mb-1
+}
+.input-Registerform{
+  @apply appearance-none block w-full text-gray-700 border border-2 border-gray-400 rounded-md p-2 leading-tight focus:outline-none focus:bg-white focus:border-gray-950
+}
+
+.input-Editform{
+  @apply appearance-none block w-full bg-zinc-400 p-2 leading-tight border border-b-zinc-950 border-l-zinc-950 focus:outline-none focus:bg-white focus:border-gray-950 hover:border-zinc-950
+}
+
+.label-Editform{
+  @apply block text-zinc-950 text-base mb-1
+}
+
