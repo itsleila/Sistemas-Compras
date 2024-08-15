@@ -39,7 +39,7 @@ const opcoes = {
   rangeSeparatorText: 'de',
 };
 
-const DefaultDataTable = ({ title, columns, data }) => {
+const DefaultDataTable = ({ title, columns, data, conditionalRowStyles }) => {
   const [filterText, setFilterText] = useState('');
   const [filteredData, setFilteredData] = useState(data);
 
@@ -47,11 +47,14 @@ const DefaultDataTable = ({ title, columns, data }) => {
     setFilteredData(
       data.filter((item) =>
         columns.some((column) => {
-          const value = column.selector(item);
-          return (
-            value &&
-            value.toString().toLowerCase().includes(filterText.toLowerCase())
-          );
+          if (typeof column.selector === 'function') {
+            const value = column.selector(item);
+            return (
+              value &&
+              value.toString().toLowerCase().includes(filterText.toLowerCase())
+            );
+          }
+          return false;
         }),
       ),
     );
@@ -82,6 +85,7 @@ const DefaultDataTable = ({ title, columns, data }) => {
         paginationComponentOptions={opcoes}
         pagination
         paginationPerPage={5}
+        conditionalRowStyles={conditionalRowStyles}
       />
     </div>
   );

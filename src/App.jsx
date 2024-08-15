@@ -15,6 +15,7 @@ import ContatoForm from './pages/Contatos/ContatoForm';
 import CotacoesForm from './pages/Cotacoes/CotacoesForm';
 import ProdutosForm from './pages/Produtos/ProdutosForm';
 import ProtectedRoute from './components/ProtectedRoute';
+import Requisicoes from './pages/Requisicoes/RequisicoesList';
 
 function App() {
   const [usuario, setUsuario] = useState(null);
@@ -56,6 +57,14 @@ function App() {
             element={
               <ProtectedRoute usuario={usuario}>
                 <CotacoesList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="requisicoes"
+            element={
+              <ProtectedRoute usuario={usuario}>
+                <Requisicoes />
               </ProtectedRoute>
             }
           />

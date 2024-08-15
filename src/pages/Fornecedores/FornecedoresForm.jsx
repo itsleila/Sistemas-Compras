@@ -1,29 +1,62 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '../../components';
-import { regexCNPJ, regexEmail } from '../../infra/regex';
+import { regexCEP, regexCNPJ, regexEmail } from '../../infra/regex';
 import { inserirFornecedor } from './fornecedores';
+import obterEndereco from '../../infra/cep';
 
 function FornecedoresForm({ onFornecedorAdded }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showInputs, setShowInputs] = useState(false);
+  const [erro, setErro] = useState(null);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
     reset,
   } = useForm();
 
   async function onSubmit(dados) {
-    let id = await inserirFornecedor(dados);
-    reset();
-    setShowConfirmation(true);
-    if (onFornecedorAdded) {
-      onFornecedorAdded();
+    try {
+      let id = await inserirFornecedor(dados);
+      reset();
+      setShowConfirmation(true);
+      if (onFornecedorAdded) {
+        onFornecedorAdded();
+      }
+      setTimeout(() => {
+        setShowConfirmation(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Erro ao inserir fornecedor:', error);
+      setErro('Erro ao cadastrar fornecedor');
     }
-    setTimeout(() => {
-      setShowConfirmation(false);
-    }, 2000);
+  }
+
+  async function handleChangeEndereco(e) {
+    const cep = e.target.value.replace(/\D/g, '');
+    if (regexCEP.test(cep)) {
+      try {
+        const enderecoObtido = await obterEndereco(cep);
+        if (enderecoObtido && !enderecoObtido.erro) {
+          setErro(null);
+          setShowInputs(true);
+          setValue('logradouro', enderecoObtido.logradouro || '');
+          setValue('bairro', enderecoObtido.bairro || '');
+          setValue('localidade', enderecoObtido.localidade || '');
+          setValue('uf', enderecoObtido.uf || '');
+        } else {
+          setErro('CEP não encontrado');
+        }
+      } catch (error) {
+        console.error('Erro ao obter endereço:', error);
+        setErro('Erro ao buscar endereço');
+      }
+    } else {
+      setErro('CEP inválido');
+    }
   }
 
   return (
@@ -153,32 +186,96 @@ function FornecedoresForm({ onFornecedorAdded }) {
             )}
           </div>
           <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
-            <label htmlFor="endereco" className="label-Registerform">
-              Endereço da empresa
+            <label htmlFor="cep" className="label-Registerform">
+              Endereço
             </label>
             <input
-              id="endereco"
-              placeholder="cidade, rua - numero"
+              id="cep"
+              placeholder="CEP (EX: 01001000)"
               size={100}
               type="text"
               className="input-Registerform"
-              {...register('endereco', {
-                required: 'Endereco é obrigatorio',
+              {...register('cep', {
+                onChange: (e) => {
+                  handleChangeEndereco(e);
+                },
+                required: 'CEP é obrigatorio',
                 validate: {
-                  minLength: (value) =>
-                    value.length >= 5 ||
-                    'Endereço tem que ter pelo menos 5 caracteres',
-                  maxLength: (value) =>
-                    value.length <= 100 ||
-                    'Endereço não pode ter mais que 100 caracteres',
+                  matchPattern: (value) =>
+                    regexCEP.test(value) || 'CEP inválido',
                 },
               })}
             />
-            {errors.endereco && (
-              <p className="error-message">{errors.endereco.message}</p>
+            {errors.cep && (
+              <p className="error-message">{errors.cep.message}</p>
             )}
           </div>
         </div>
+        {showInputs && (
+          <div className="flex flex-wrap -mx-3 mb-6">
+            <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
+              <label htmlFor="logradouro" className="label-Registerform">
+                Logradouro
+              </label>
+              <input
+                id="logradouro"
+                type="text"
+                placeholder="Logradouro"
+                size={50}
+                className="input-Registerform"
+                {...register('logradouro', {
+                  required: 'Logradouro é obrigatorio',
+                })}
+              />
+            </div>
+            <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
+              <label htmlFor="bairro" className="label-Registerform">
+                Bairro
+              </label>
+              <input
+                id="bairro"
+                type="text"
+                placeholder="Bairro"
+                size={50}
+                className="input-Registerform"
+                {...register('bairro', {
+                  required: 'Bairro é obrigatorio',
+                })}
+              />
+            </div>
+            <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
+              <label htmlFor="localidade" className="label-Registerform">
+                Localidade
+              </label>
+              <input
+                id="localidade"
+                type="text"
+                placeholder="Localidade"
+                size={50}
+                className="input-Registerform"
+                {...register('localidade', {
+                  required: 'Localidade é obrigatoria',
+                })}
+              />
+            </div>
+            <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
+              <label htmlFor="uf" className="label-Registerform">
+                UF
+              </label>
+              <input
+                id="uf"
+                type="text"
+                placeholder="UF"
+                size={2}
+                className="input-Registerform"
+                {...register('uf', {
+                  required: 'UF é obrigatorio',
+                })}
+              />
+            </div>
+          </div>
+        )}
+        {erro && <p className="error-message">{erro}</p>}
         <div className="flex flex-col items-center">
           <Button
             size="large"

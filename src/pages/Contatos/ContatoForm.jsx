@@ -123,6 +123,32 @@ function ContatoForm({ onContatoAdded }) {
             )}
           </div>
           <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
+            <label htmlFor="cargo" className="label-Registerform">
+              Cargo
+            </label>
+            <input
+              id="cargo"
+              type="cargo"
+              placeholder="função do contato"
+              size={30}
+              className="input-Registerform"
+              {...register('cargo', {
+                required: 'O cargo do comtato é obrigatório',
+                minLength: {
+                  value: 5,
+                  message: 'Cargo tem que ter pelo menos 5 caracteres',
+                },
+                maxLength: {
+                  value: 50,
+                  message: 'Cargo não pode ter mais que 50 caracteres',
+                },
+              })}
+            />
+            {errors.email && (
+              <p className="error-message">{errors.email.message}</p>
+            )}
+          </div>
+          <div className="w-full  px-3 my-4 md:mb-0">
             <label htmlFor="fornecedor" className="label-Registerform">
               Fornecedor
             </label>

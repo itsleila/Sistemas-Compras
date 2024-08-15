@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { BarraLogin, Container } from '../components';
+import FeedCarrosel from './FeedCarrosel';
 
 function Home({ usuario }) {
   return (
@@ -10,13 +11,13 @@ function Home({ usuario }) {
           <nav>
             <ul className="nav-div">
               <li>
-                <Link to={'/fornecedores'} className="nav-link">
-                  Fornecedores
+                <Link to={'/requisicoes'} className="nav-link">
+                  Requisições
                 </Link>
               </li>
               <li>
-                <Link to={'/contatos'} className="nav-link">
-                  Contatos
+                <Link to={'/cotacoes'} className="nav-link">
+                  Cotações
                 </Link>
               </li>
               <li>
@@ -25,8 +26,13 @@ function Home({ usuario }) {
                 </Link>
               </li>
               <li>
-                <Link to={'/cotacoes'} className="nav-link">
-                  Cotações
+                <Link to={'/fornecedores'} className="nav-link">
+                  Fornecedores
+                </Link>
+              </li>
+              <li>
+                <Link to={'/contatos'} className="nav-link">
+                  Contatos
                 </Link>
               </li>
             </ul>
@@ -58,6 +64,11 @@ function Home({ usuario }) {
           {!usuario && (
             <div className=" text-center my-5 py-3">
               <BarraLogin buttonSize="meddium" />
+            </div>
+          )}
+          {usuario && (
+            <div className="my-20">
+              <FeedCarrosel />
             </div>
           )}
         </Container>

@@ -33,6 +33,20 @@ img {
   @apply flex justify-around p-2 my-4 bg-blue-ribbon; 
 }
 
+.nav-info {
+  @apply flex justify-around p-2 my-4 border-y-2 border-blue-ribbon ; 
+}
+
+.nav-li {
+  @apply text-gray-950 m-2 text-sm hover:text-blue-700 hover:font-semibold transition-transform duration-300;
+}
+.info-paragrafo{
+  @apply  font-medium font-text-body ;
+}
+.info-container{
+  @apply max-w-3xl flex flex-col justify-center mx-auto ;
+}
+
 .nav-link {
   @apply text-gray-one m-2 text-sm font-semibold hover:text-base hover:text-white transition-transform duration-300;
 }
@@ -95,7 +109,7 @@ img {
   @apply text-2xl font-bold tracking-wide px-2;
 }
 
-.modal-title{
+.modal-title{ 
   @apply text-lg font-bold tracking-wide text-center;
 }
 
@@ -146,5 +160,17 @@ img {
 
 .label-Editform{
   @apply block text-zinc-950 text-base mb-1
+}
+
+.info-Title{
+  @apply text-3xl font-medium font-text-body p-3
+}
+
+.row-aprovada {
+  background-color: #d4edda !important;
+}
+
+.row-reprovada {
+  background-color: #f8d7da !important;
 }
 

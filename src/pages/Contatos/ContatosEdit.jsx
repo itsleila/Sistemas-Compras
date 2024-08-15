@@ -44,6 +44,14 @@ function ContatosEdit({ contato, onClose, onContatoUpdated }) {
           className="input-Editform"
           {...register('telefone', { required: 'Telefone é obrigatório' })}
         />
+        {errors.cargo && <span>{errors.cargo.message}</span>}
+      </label>
+      <label className="label-Editform">
+        Cargo:
+        <input
+          className="input-Editform"
+          {...register('cargo', { required: 'cargo é obrigatório' })}
+        />
         {errors.telefone && <span>{errors.telefone.message}</span>}
       </label>
       <Button

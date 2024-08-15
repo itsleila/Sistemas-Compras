@@ -67,6 +67,11 @@ function ContatoList() {
       sortable: true,
     },
     {
+      name: 'Cargo',
+      selector: (row) => row.cargo,
+      sortable: true,
+    },
+    {
       name: 'Fornecedor',
       selector: (row) => row.fornecedor,
       sortable: true,
