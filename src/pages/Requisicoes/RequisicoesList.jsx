@@ -4,13 +4,16 @@ import { DataTable } from '../../components';
 import RequisicoesForm from './RequisicoesForm';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
 import CancelRounded from '@mui/icons-material/CancelRounded';
 import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded';
 import QueryBuilderRounded from '@mui/icons-material/QueryBuilderRounded';
+import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
 import RequisicoesEdit from './RequisicoesEdit';
 import { excluirRequisicao, listarRequisicoes } from './Requisicoes';
+import Tooltip from '@mui/material/Tooltip';
 
-function Requisicoes() {
+function Requisicoes({ isAdmin }) {
   const [requisicoes, setRequisicoes] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -19,6 +22,10 @@ function Requisicoes() {
 
   useEffect(() => {
     fetchRequisicoes();
+    const storedAproveStates = localStorage.getItem('aproveStates');
+    if (storedAproveStates) {
+      setAproveStates(JSON.parse(storedAproveStates));
+    }
   }, []);
 
   async function fetchRequisicoes() {
@@ -65,10 +72,12 @@ function Requisicoes() {
       } else {
         nextState = 'analise';
       }
-      return {
+      const updatedState = {
         ...prevState,
         [row.id]: nextState,
       };
+      localStorage.setItem('aproveStates', JSON.stringify(updatedState));
+      return updatedState;
     });
   };
 
@@ -100,13 +109,13 @@ function Requisicoes() {
       sortable: true,
     },
     {
-      name: 'Status da requisição',
-      selector: (row) => row.status,
+      name: 'Data da Requisição',
+      selector: (row) => row.data,
       sortable: true,
     },
     {
-      name: 'Fornecedor',
-      selector: (row) => row.fornecedor,
+      name: 'Status da requisição',
+      selector: (row) => row.status,
       sortable: true,
     },
     {
@@ -115,17 +124,40 @@ function Requisicoes() {
       sortable: true,
     },
     {
+      name: 'Fornecedor',
+      selector: (row) => row.fornecedor,
+      sortable: true,
+    },
+    {
       name: 'Ações',
       cell: (row) => (
         <div>
-          <EditIcon
-            style={{ cursor: 'pointer', marginRight: '10px' }}
-            onClick={() => handleOpenEditModal(row)}
-          />
-          <DeleteIcon
-            style={{ cursor: 'pointer' }}
-            onClick={() => handleOpenConfirmModal(row)}
-          />
+          <Tooltip title="exportar cotação">
+            <UploadFileRoundedIcon
+              style={{ cursor: 'pointer', marginRight: '10px' }}
+            />
+          </Tooltip>
+          <Tooltip
+            title={
+              isAdmin ? 'modificarar' : 'Apenas adiminstradores podem modificar'
+            }
+          >
+            <EditIcon
+              style={{ cursor: 'pointer', marginRight: '10px' }}
+              onClick={() => handleOpenEditModal(row)}
+            />
+          </Tooltip>
+
+          <Tooltip
+            title={
+              isAdmin ? 'excluir' : 'Apenas adiminstradores podem modificar'
+            }
+          >
+            <DeleteIcon
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleOpenConfirmModal(row)}
+            />
+          </Tooltip>
         </div>
       ),
     },
@@ -157,33 +189,44 @@ function Requisicoes() {
           },
         ]}
       />
-
-      <RequisicoesForm onRequisicaoAdded={fetchRequisicoes} />
-
-      <Modal
-        open={editModalOpen}
-        onClose={handleCloseEditModal}
-        title="Editar Requisição"
-      >
-        {selectedRequisicao && (
-          <RequisicoesEdit
-            requisicao={selectedRequisicao}
-            onClose={handleCloseEditModal}
-            onRequisicaoUpdated={fetchRequisicoes}
+      {!isAdmin && <RequisicoesForm onRequisicaoAdded={fetchRequisicoes} />}
+      {isAdmin && (
+        <Modal
+          open={editModalOpen}
+          onClose={handleCloseEditModal}
+          title="Editar Requisição"
+        >
+          {selectedRequisicao && (
+            <RequisicoesEdit
+              requisicao={selectedRequisicao}
+              onClose={handleCloseEditModal}
+              onRequisicaoUpdated={fetchRequisicoes}
+            />
+          )}
+          <CloseIcon
+            onClick={handleCloseEditModal}
+            sx={{
+              position: 'absolute',
+              top: 15,
+              right: 15,
+              cursor: 'pointer',
+            }}
           />
-        )}
-      </Modal>
+        </Modal>
+      )}
 
-      <Modal
-        open={confirmModalOpen}
-        onClose={handleCloseConfirmModal}
-        title="Confirmar Exclusão"
-        onConfirm={handleDelete}
-      >
-        <p className="modal-paragrafo">
-          Tem certeza que deseja excluir esta requisição?
-        </p>
-      </Modal>
+      {isAdmin && (
+        <Modal
+          open={confirmModalOpen}
+          onClose={handleCloseConfirmModal}
+          title="Confirmar Exclusão"
+          onConfirm={handleDelete}
+        >
+          <p className="modal-paragrafo">
+            Tem certeza que deseja excluir esta requisição?
+          </p>
+        </Modal>
+      )}
     </Container>
   );
 }

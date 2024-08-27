@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import ProdutosList from './pages/Produtos/ProdutosList';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from './infra/firebase';
+import './App.css';
+import Produtos from './pages/Produtos/ProdutosList';
 import FornecedoresList from './pages/Fornecedores/FornecedoresList';
 import ContatoList from './pages/Contatos/ContatoList';
 import CotacoesList from './pages/Cotacoes/CotacoesList';
@@ -10,15 +13,33 @@ import Layout from './pages/Layout';
 import NotFound from './pages/NotFound';
 import Login from './components/login/Login';
 import CriarConta from './components/login/CriarConta';
-import FornecedoresForm from './pages/Fornecedores/FornecedoresForm';
-import ContatoForm from './pages/Contatos/ContatoForm';
-import CotacoesForm from './pages/Cotacoes/CotacoesForm';
-import ProdutosForm from './pages/Produtos/ProdutosForm';
 import ProtectedRoute from './components/ProtectedRoute';
 import Requisicoes from './pages/Requisicoes/RequisicoesList';
 
 function App() {
   const [usuario, setUsuario] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUsuario(user);
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setIsAdmin(!!userData.isAdmin);
+        } else {
+          setIsAdmin(false);
+        }
+      } else {
+        setUsuario(null);
+        setIsAdmin(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <Router>
@@ -32,7 +53,7 @@ function App() {
             path="produtos"
             element={
               <ProtectedRoute usuario={usuario}>
-                <ProdutosList />
+                <Produtos isAdmin={isAdmin} />
               </ProtectedRoute>
             }
           />
@@ -40,7 +61,7 @@ function App() {
             path="fornecedores"
             element={
               <ProtectedRoute usuario={usuario}>
-                <FornecedoresList />
+                <FornecedoresList isAdmin={isAdmin} />
               </ProtectedRoute>
             }
           />
@@ -48,7 +69,7 @@ function App() {
             path="contatos"
             element={
               <ProtectedRoute usuario={usuario}>
-                <ContatoList />
+                <ContatoList isAdmin={isAdmin} />
               </ProtectedRoute>
             }
           />
@@ -56,7 +77,7 @@ function App() {
             path="cotacoes"
             element={
               <ProtectedRoute usuario={usuario}>
-                <CotacoesList />
+                <CotacoesList isAdmin={isAdmin} />
               </ProtectedRoute>
             }
           />
@@ -64,7 +85,7 @@ function App() {
             path="requisicoes"
             element={
               <ProtectedRoute usuario={usuario}>
-                <Requisicoes />
+                <Requisicoes isAdmin={isAdmin} />
               </ProtectedRoute>
             }
           />

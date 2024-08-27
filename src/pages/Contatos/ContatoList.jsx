@@ -6,8 +6,9 @@ import ContatoForm from './ContatoForm';
 import ContatosEdit from './ContatosEdit';
 import { Container, Modal } from '../../components';
 import { DataTable } from '../../components';
+import { Tooltip } from '@mui/material';
 
-function ContatoList() {
+function ContatoList({ isAdmin }) {
   const [contatos, setContatos] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -80,14 +81,27 @@ function ContatoList() {
       name: 'Ações',
       cell: (row) => (
         <div>
-          <EditIcon
-            style={{ cursor: 'pointer', marginRight: '10px' }}
-            onClick={() => handleOpenEditModal(row)}
-          />
-          <DeleteIcon
-            style={{ cursor: 'pointer' }}
-            onClick={() => handleOpenConfirmModal(row)}
-          />
+          <Tooltip
+            title={
+              isAdmin ? 'editar' : 'Apenas adiminstradores podem modificar'
+            }
+          >
+            <EditIcon
+              style={{ cursor: 'pointer', marginRight: '10px' }}
+              onClick={() => handleOpenEditModal(row)}
+            />
+          </Tooltip>
+
+          <Tooltip
+            title={
+              isAdmin ? 'excluir' : 'Apenas adiminstradores podem modificar'
+            }
+          >
+            <DeleteIcon
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleOpenConfirmModal(row)}
+            />
+          </Tooltip>
         </div>
       ),
     },
@@ -106,30 +120,32 @@ function ContatoList() {
 
       <DataTable columns={columns} data={contatos} pagination />
 
-      <ContatoForm onContatoAdded={fetchContatos} />
-
-      <Modal
-        open={editModalOpen}
-        onClose={handleCloseEditModal}
-        title="Editar Contato"
-      >
-        {selectedContato && (
-          <ContatosEdit
-            contato={selectedContato}
-            onClose={handleCloseEditModal}
-            onContatoUpdated={fetchContatos}
-          />
-        )}
-      </Modal>
-
-      <Modal
-        open={confirmModalOpen}
-        onClose={handleCloseConfirmModal}
-        title="Confirma Exclusão"
-        onConfirm={handleDelete}
-      >
-        <p>Tem certeza que deseja excluir este contato?</p>
-      </Modal>
+      {isAdmin && (
+        <Modal
+          open={editModalOpen}
+          onClose={handleCloseEditModal}
+          title="Editar Contato"
+        >
+          {selectedContato && (
+            <ContatosEdit
+              contato={selectedContato}
+              onClose={handleCloseEditModal}
+              onContatoUpdated={fetchContatos}
+            />
+          )}
+        </Modal>
+      )}
+      {isAdmin && (
+        <Modal
+          open={confirmModalOpen}
+          onClose={handleCloseConfirmModal}
+          title="Confirma Exclusão"
+          onConfirm={handleDelete}
+        >
+          <p>Tem certeza que deseja excluir este contato?</p>
+        </Modal>
+      )}
+      {isAdmin && <ContatoForm onContatoAdded={fetchContatos} />}
     </Container>
   );
 }

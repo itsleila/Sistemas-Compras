@@ -1,5 +1,8 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import {
+  getAuth,
+  onAuthStateChanged as onAuthStateChangedFirebase,
+} from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -13,5 +16,20 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export default app;
 export const db = getFirestore(app);
+export const onAuthStateChanged = onAuthStateChangedFirebase;
+
+const setAdminUser = async () => {
+  const userId = 'EXUEd8FB1mSozYpWGSRrFwbhDfj2';
+  const userDocRef = doc(db, 'users', userId);
+  try {
+    await setDoc(userDocRef, {
+      email: 'admin@gmail.com',
+      isAdmin: true,
+    });
+  } catch (error) {
+    console.error('Erro ao definir usuário admin:', error);
+  }
+};
+
+setAdminUser();

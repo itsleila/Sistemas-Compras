@@ -6,8 +6,9 @@ import CotacoesForm from './CotacoesForm';
 import CotacoesEdit from './CotacoesEdit';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import Tooltip from '@mui/material/Tooltip';
 
-function Cotacoes() {
+function Cotacoes({ isAdmin }) {
   const [cotacoes, setCotacoes] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -75,14 +76,27 @@ function Cotacoes() {
       name: 'Ações',
       cell: (row) => (
         <div>
-          <EditIcon
-            style={{ cursor: 'pointer', marginRight: '10px' }}
-            onClick={() => handleOpenEditModal(row)}
-          />
-          <DeleteIcon
-            style={{ cursor: 'pointer' }}
-            onClick={() => handleOpenConfirmModal(row)}
-          />
+          <Tooltip
+            title={
+              isAdmin ? 'editar' : 'Apenas adiminstradores podem modificar'
+            }
+          >
+            <EditIcon
+              style={{ cursor: 'pointer', marginRight: '10px' }}
+              onClick={() => handleOpenEditModal(row)}
+            />
+          </Tooltip>
+
+          <Tooltip
+            title={
+              isAdmin ? 'excluir' : 'Apenas adiminstradores podem modificar'
+            }
+          >
+            <DeleteIcon
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleOpenConfirmModal(row)}
+            />
+          </Tooltip>
         </div>
       ),
     },
@@ -100,32 +114,34 @@ function Cotacoes() {
       </div>
 
       <DataTable columns={columns} data={cotacoes} pagination />
-
-      <CotacoesForm onCotacaoAdded={fetchCotacoes} />
-
-      <Modal
-        open={editModalOpen}
-        onClose={handleCloseEditModal}
-        title="Editar Cotações"
-      >
-        {selectedCotacao && (
-          <CotacoesEdit
-            cotacao={selectedCotacao}
-            onClose={handleCloseEditModal}
-            onCotacaoUpdated={fetchCotacoes}
-          />
-        )}
-      </Modal>
-      <Modal
-        open={confirmModalOpen}
-        onClose={handleCloseConfirmModal}
-        title="Confirmar Exclusão"
-        onConfirm={handleDelete}
-      >
-        <p className="modal-paragrafo">
-          Tem certeza que deseja excluir esta cotação?
-        </p>
-      </Modal>
+      {/* {isAdmin && <CotacoesForm onCotacaoAdded={fetchCotacoes} />}*/}
+      {isAdmin && (
+        <Modal
+          open={editModalOpen}
+          onClose={handleCloseEditModal}
+          title="Editar Cotações"
+        >
+          {selectedCotacao && (
+            <CotacoesEdit
+              cotacao={selectedCotacao}
+              onClose={handleCloseEditModal}
+              onCotacaoUpdated={fetchCotacoes}
+            />
+          )}
+        </Modal>
+      )}
+      {isAdmin && (
+        <Modal
+          open={confirmModalOpen}
+          onClose={handleCloseConfirmModal}
+          title="Confirmar Exclusão"
+          onConfirm={handleDelete}
+        >
+          <p className="modal-paragrafo">
+            Tem certeza que deseja excluir esta cotação?
+          </p>
+        </Modal>
+      )}
     </Container>
   );
 }

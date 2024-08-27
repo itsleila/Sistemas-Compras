@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '../../components';
 import { inserirRequisicoes } from './Requisicoes';
+import { listarProdutos } from '../Produtos/Produtos';
 
-function RequisicoesForm({ onRequsicaoAdded }) {
+function RequisicoesForm({ onRequisicaoAdded }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [produtos, setProdutos] = useState([]);
   const {
     register,
     handleSubmit,
@@ -12,14 +14,22 @@ function RequisicoesForm({ onRequsicaoAdded }) {
     reset,
   } = useForm();
 
+  useEffect(() => {
+    async function fetchProdutos() {
+      const produtosList = await listarProdutos();
+      setProdutos(produtosList);
+    }
+    fetchProdutos();
+  }, []);
+
   const today = new Date().toISOString().split('T')[0];
 
   async function onSubmit(dados) {
     let id = await inserirRequisicoes(dados);
     reset();
     setShowConfirmation(true);
-    if (onRequsicaoAdded) {
-      onRequsicaoAdded();
+    if (onRequisicaoAdded) {
+      onRequisicaoAdded();
     }
     setTimeout(() => {
       setShowConfirmation(false);
@@ -35,14 +45,20 @@ function RequisicoesForm({ onRequsicaoAdded }) {
             <label htmlFor="produto" className="label-Registerform">
               Produto
             </label>
-            <input
+            <select
               id="produto"
-              type="text"
               className="input-Registerform"
               {...register('produto', {
-                required: 'Produto é obrigatório',
+                required: 'Selecione um produto',
               })}
-            />
+            >
+              <option value="">Selecione um produto</option>
+              {produtos.map((produto) => (
+                <option key={produto.id} value={produto.produto}>
+                  {produto.produto}
+                </option>
+              ))}
+            </select>
             {errors.produto && (
               <p className="error-message">{errors.produto.message}</p>
             )}
@@ -89,7 +105,7 @@ function RequisicoesForm({ onRequsicaoAdded }) {
             )}
           </div>
           <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
-            <label htmlFor="prazp" className="label-Registerform">
+            <label htmlFor="prazo" className="label-Registerform">
               Prazo
             </label>
             <input

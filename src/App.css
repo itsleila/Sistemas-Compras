@@ -174,3 +174,24 @@ img {
   background-color: #f8d7da !important;
 }
 
+
+
+.tooltip span {
+  visibility: hidden;
+  width: 250px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1;
+  right: 70%;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.tooltip:hover span {
+  visibility: visible;
+  opacity: 1;
+}
+

@@ -6,8 +6,9 @@ import ProdutosForm from './ProdutosForm';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ProdutosEdit from './ProdutosEdit';
+import { Tooltip } from '@mui/material';
 
-function Produtos() {
+function Produtos({ isAdmin }) {
   const [produtos, setProdutos] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -80,14 +81,27 @@ function Produtos() {
       name: 'Ações',
       cell: (row) => (
         <div>
-          <EditIcon
-            style={{ cursor: 'pointer', marginRight: '10px' }}
-            onClick={() => handleOpenEditModal(row)}
-          />
-          <DeleteIcon
-            style={{ cursor: 'pointer' }}
-            onClick={() => handleOpenConfirmModal(row)}
-          />
+          <Tooltip
+            title={
+              isAdmin ? 'editar' : 'Apenas adiminstradores podem modificar'
+            }
+          >
+            <EditIcon
+              style={{ cursor: 'pointer', marginRight: '10px' }}
+              onClick={() => handleOpenEditModal(row)}
+            />
+          </Tooltip>
+
+          <Tooltip
+            title={
+              isAdmin ? 'excluir' : 'Apenas adiminstradores podem modificar'
+            }
+          >
+            <DeleteIcon
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleOpenConfirmModal(row)}
+            />
+          </Tooltip>
         </div>
       ),
     },
@@ -102,35 +116,35 @@ function Produtos() {
           </p>
         </div>
       </div>
-
       <DataTable columns={columns} data={produtos} pagination />
-
-      <ProdutosForm onProdutoAdded={fetchProdutos} />
-
-      <Modal
-        open={editModalOpen}
-        onClose={handleCloseEditModal}
-        title="Editar Produto"
-      >
-        {selectedProduto && (
-          <ProdutosEdit
-            produto={selectedProduto}
-            onClose={handleCloseEditModal}
-            onProdutoUpdated={fetchProdutos}
-          />
-        )}
-      </Modal>
-
-      <Modal
-        open={confirmModalOpen}
-        onClose={handleCloseConfirmModal}
-        title="Confirmar Exclusão"
-        onConfirm={handleDelete}
-      >
-        <p className="modal-paragrafo">
-          Tem certeza que deseja excluir este produto?
-        </p>
-      </Modal>
+      {isAdmin && (
+        <Modal
+          open={editModalOpen}
+          onClose={handleCloseEditModal}
+          title="Editar Produto"
+        >
+          {selectedProduto && (
+            <ProdutosEdit
+              produto={selectedProduto}
+              onClose={handleCloseEditModal}
+              onProdutoUpdated={fetchProdutos}
+            />
+          )}
+        </Modal>
+      )}
+      {isAdmin && (
+        <Modal
+          open={confirmModalOpen}
+          onClose={handleCloseConfirmModal}
+          title="Confirmar Exclusão"
+          onConfirm={handleDelete}
+        >
+          <p className="modal-paragrafo">
+            Tem certeza que deseja excluir este produto?
+          </p>
+        </Modal>
+      )}
+      {isAdmin && <ProdutosForm onProdutoAdded={fetchProdutos} />}
     </Container>
   );
 }

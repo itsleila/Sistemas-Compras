@@ -49,8 +49,8 @@ function CotacoesForm({ onCotacaoAdded }) {
   }
 
   return (
-    <div className="registerForm-div">
-      <h2 className="registerForm-title">Cadastrar Cotação</h2>
+    <div className="registerForm-div shadow-md mt-9">
+      <h2 className="modal-title">Cadastrar Cotação</h2>
       <form className="authForm-form" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-wrap -mx-3 mb-6">
           <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
