@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../../assets/img/Logo.svg';
-import BarraLogin from '../login/BarraLogin';
+import BarraLogin from '../BarraLogin/BarraLogin';
 import { Container } from '..';
+import PersonIcon from '@mui/icons-material/Person';
 
 const DefaultHeader = ({ usuario, setUsuario }) => {
   return (
@@ -14,7 +15,11 @@ const DefaultHeader = ({ usuario, setUsuario }) => {
           </Link>
         </div>
         <div>
-          <BarraLogin usuario={usuario} setUsuario={setUsuario} />
+          <BarraLogin
+            usuario={usuario}
+            setUsuario={setUsuario}
+            variant="text"
+          />
         </div>
       </nav>
     </Container>

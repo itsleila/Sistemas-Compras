@@ -1,84 +1,148 @@
-import React, { useEffect, useState } from 'react';
-import { Container, Modal } from '../../components';
+import React, { useEffect, useReducer, useState } from 'react';
+import { Button, Container, Modal } from '../../components';
 import { DataTable } from '../../components';
 import RequisicoesForm from './RequisicoesForm';
-import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import CancelRounded from '@mui/icons-material/CancelRounded';
 import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded';
 import QueryBuilderRounded from '@mui/icons-material/QueryBuilderRounded';
-import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
-import RequisicoesEdit from './RequisicoesEdit';
+import { RequisicoesCotacao, CadastrarCotacao } from './RequisicoesEdit';
 import { excluirRequisicao, listarRequisicoes } from './Requisicoes';
+import { listarCotacoes } from '../Cotacoes/Cotacoes';
 import Tooltip from '@mui/material/Tooltip';
 
+const initialState = {
+  requisicoes: [],
+  abrirModalEdit: false,
+  createModalOpen: false,
+  abrirModalConfirm: false,
+  cotacaoModalOpen: false,
+  selectedRequisicao: null,
+};
+
+function reducer(estado, acao) {
+  switch (acao.type) {
+    case 'REQUISICOES':
+      return { ...estado, requisicoes: acao.payload };
+    case 'ABRIR_MODALEDIT':
+      return {
+        ...estado,
+        abrirModalEdit: true,
+        selectedRequisicao: acao.payload,
+      };
+    case 'FECHAR_MODALEDIT':
+      return { ...estado, abrirModalEdit: false, selectedRequisicao: null };
+    case 'ABRIR_CREATEMODAL':
+      return {
+        ...estado,
+        createModalOpen: true,
+        cotacaoModalOpen: true,
+        selectedRequisicao: acao.payload,
+      };
+    case 'FECHAR_CREATEMODAL':
+      return {
+        ...estado,
+        createModalOpen: false,
+        cotacaoModalOpen: false,
+        selectedRequisicao: null,
+      };
+    case 'ABRIR_MODALCONFIRM':
+      return {
+        ...estado,
+        abrirModalConfirm: true,
+        selectedRequisicao: acao.payload,
+      };
+    case 'FECHAR_MODALCONFIRM':
+      return { ...estado, abrirModalConfirm: false, selectedRequisicao: null };
+    default:
+      return estado;
+  }
+}
+
 function Requisicoes({ isAdmin }) {
-  const [requisicoes, setRequisicoes] = useState([]);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [selectedRequisicao, setSelectedRequisicao] = useState(null);
+  const [cotacoes, setCotacoes] = useState([]);
   const [aproveStates, setAproveStates] = useState({});
+  const [estado, dispatch] = useReducer(reducer, initialState);
+  const {
+    requisicoes,
+    abrirModalEdit,
+    createModalOpen,
+    abrirModalConfirm,
+    selectedRequisicao,
+    cotacaoModalOpen,
+  } = estado;
+
+  const fetchData = async () => {
+    const [requisicoesList, cotacoesList] = await Promise.all([
+      listarRequisicoes(),
+      listarCotacoes(),
+    ]);
+    dispatch({ type: 'REQUISICOES', payload: requisicoesList });
+    setCotacoes(cotacoesList);
+  };
 
   useEffect(() => {
-    fetchRequisicoes();
+    fetchData();
     const storedAproveStates = localStorage.getItem('aproveStates');
     if (storedAproveStates) {
       setAproveStates(JSON.parse(storedAproveStates));
     }
   }, []);
 
-  async function fetchRequisicoes() {
-    const requisicoesList = await listarRequisicoes();
-    setRequisicoes(requisicoesList);
-  }
-
-  const handleOpenEditModal = (requisicao) => {
-    setSelectedRequisicao(requisicao);
-    setEditModalOpen(true);
+  const handleCotacaoAdded = async () => {
+    await fetchData();
   };
 
-  const handleCloseEditModal = () => {
-    setEditModalOpen(false);
-    setSelectedRequisicao(null);
+  const handleRequisicaoUpdated = async () => {
+    await fetchData();
   };
 
-  const handleOpenConfirmModal = (requisicao) => {
-    setSelectedRequisicao(requisicao);
-    setConfirmModalOpen(true);
-  };
-
-  const handleCloseConfirmModal = () => {
-    setConfirmModalOpen(false);
-    setSelectedRequisicao(null);
+  const handleAprove = (requisicao) => {
+    const currentState = aproveStates[requisicao.id] || 'analise';
+    if (!isAdmin) {
+      return;
+    }
+    let newState;
+    if (currentState === 'analise') {
+      newState = 'aprovada';
+    } else if (currentState === 'aprovada') {
+      newState = 'reprovada';
+    } else {
+      newState = 'analise';
+    }
+    const updatedAproveStates = {
+      ...aproveStates,
+      [requisicao.id]: newState,
+    };
+    localStorage.setItem('aproveStates', JSON.stringify(updatedAproveStates));
+    setAproveStates(updatedAproveStates);
   };
 
   const handleDelete = async () => {
     if (selectedRequisicao) {
       await excluirRequisicao(selectedRequisicao.id);
-      fetchRequisicoes();
-      handleCloseConfirmModal();
+      dispatch({
+        type: 'REQUISICOES',
+        payload: requisicoes.filter((req) => req.id !== selectedRequisicao.id),
+      });
+      dispatch({ type: 'FECHAR_MODALCONFIRM' });
     }
   };
 
-  const handleAprove = (row) => {
-    setAproveStates((prevState) => {
-      const currentState = prevState[row.id] || 'analise';
-      let nextState;
-      if (currentState === 'analise') {
-        nextState = 'aprovada';
-      } else if (currentState === 'aprovada') {
-        nextState = 'reprovada';
-      } else {
-        nextState = 'analise';
-      }
-      const updatedState = {
-        ...prevState,
-        [row.id]: nextState,
-      };
-      localStorage.setItem('aproveStates', JSON.stringify(updatedState));
-      return updatedState;
-    });
+  const getStatus = (produto) => {
+    const filteredCotacoes = cotacoes.filter(
+      (cotacao) => cotacao.produto === produto,
+    );
+    const cotacoesCount = filteredCotacoes.length;
+
+    if (cotacoesCount === 0) {
+      return 'aguardando';
+    } else if (cotacoesCount > 0 && cotacoesCount < 3) {
+      return 'em andamento';
+    } else {
+      return 'finalizada';
+    }
   };
 
   const columns = [
@@ -95,10 +159,33 @@ function Requisicoes({ isAdmin }) {
         } else {
           IconComponent = QueryBuilderRounded;
         }
-
         return (
-          <div onClick={() => handleAprove(row)} style={{ cursor: 'pointer' }}>
-            <IconComponent style={{ marginRight: '10px' }} />
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <IconComponent
+              style={{
+                marginRight: '10px',
+                fill:
+                  currentState === 'aprovada'
+                    ? 'green'
+                    : currentState === 'reprovada'
+                    ? 'red'
+                    : 'black',
+                cursor: 'pointer',
+              }}
+              onClick={() => handleAprove(row)}
+            />
+            {currentState === 'aprovada' && isAdmin && (
+              <Button
+                text="Abrir cotação"
+                color="zinc95"
+                variant="contained"
+                size="small"
+                sx={{ fontSize: 10 }}
+                onClick={() =>
+                  dispatch({ type: 'ABRIR_CREATEMODAL', payload: row })
+                }
+              />
+            )}
           </div>
         );
       },
@@ -111,51 +198,49 @@ function Requisicoes({ isAdmin }) {
     {
       name: 'Data da Requisição',
       selector: (row) => row.data,
+      format: (row) =>
+        new Intl.DateTimeFormat('pt-BR').format(new Date(row.data)),
       sortable: true,
     },
     {
       name: 'Status da requisição',
-      selector: (row) => row.status,
+      selector: (row) => getStatus(row.produto),
       sortable: true,
     },
     {
       name: 'Cotação',
-      selector: (row) => row.cotacao,
-      sortable: true,
-    },
-    {
-      name: 'Fornecedor',
-      selector: (row) => row.fornecedor,
-      sortable: true,
+      selector: (row) => (
+        <div>
+          <Button
+            variant="text"
+            text="Cotações"
+            style={{ cursor: 'pointer', marginRight: '10px' }}
+            color="zinc95"
+            size="small"
+            sx={{
+              fontWeight: 400,
+              '&:hover': {
+                backgroundColor: 'none',
+              },
+              '&:focus': {
+                outline: 'none',
+              },
+            }}
+            onClick={() => dispatch({ type: 'ABRIR_MODALEDIT', payload: row })}
+          />
+        </div>
+      ),
     },
     {
       name: 'Ações',
       cell: (row) => (
         <div>
-          <Tooltip title="exportar cotação">
-            <UploadFileRoundedIcon
-              style={{ cursor: 'pointer', marginRight: '10px' }}
-            />
-          </Tooltip>
-          <Tooltip
-            title={
-              isAdmin ? 'modificarar' : 'Apenas adiminstradores podem modificar'
-            }
-          >
-            <EditIcon
-              style={{ cursor: 'pointer', marginRight: '10px' }}
-              onClick={() => handleOpenEditModal(row)}
-            />
-          </Tooltip>
-
-          <Tooltip
-            title={
-              isAdmin ? 'excluir' : 'Apenas adiminstradores podem modificar'
-            }
-          >
+          <Tooltip title="excluir">
             <DeleteIcon
               style={{ cursor: 'pointer' }}
-              onClick={() => handleOpenConfirmModal(row)}
+              onClick={() =>
+                dispatch({ type: 'ABRIR_MODALCONFIRM', payload: row })
+              }
             />
           </Tooltip>
         </div>
@@ -175,36 +260,56 @@ function Requisicoes({ isAdmin }) {
       </div>
 
       <DataTable
+        key={requisicoes.length}
         columns={columns}
         data={requisicoes}
         pagination
-        conditionalRowStyles={[
-          {
-            when: (row) => aproveStates[row.id] === 'aprovada',
-            classNames: ['row-aprovada'],
-          },
-          {
-            when: (row) => aproveStates[row.id] === 'reprovada',
-            classNames: ['row-reprovada'],
-          },
-        ]}
       />
-      {!isAdmin && <RequisicoesForm onRequisicaoAdded={fetchRequisicoes} />}
+
+      {!isAdmin && (
+        <RequisicoesForm onRequisicaoAdded={handleRequisicaoUpdated} />
+      )}
+
+      <Modal
+        open={abrirModalEdit}
+        onClose={() => dispatch({ type: 'FECHAR_MODALEDIT' })}
+        title="Cotações"
+      >
+        {selectedRequisicao && (
+          <RequisicoesCotacao
+            requisicao={selectedRequisicao}
+            onClose={() => dispatch({ type: 'FECHAR_MODALEDIT' })}
+            onRequisicaoUpdated={fetchData}
+          />
+        )}
+        <CloseIcon
+          onClick={() => dispatch({ type: 'FECHAR_MODALEDIT' })}
+          sx={{
+            position: 'absolute',
+            top: 15,
+            right: 15,
+            cursor: 'pointer',
+          }}
+        />
+      </Modal>
+
       {isAdmin && (
         <Modal
-          open={editModalOpen}
-          onClose={handleCloseEditModal}
-          title="Editar Requisição"
+          open={createModalOpen}
+          onClose={() => dispatch({ type: 'FECHAR_CREATEMODAL' })}
         >
-          {selectedRequisicao && (
-            <RequisicoesEdit
-              requisicao={selectedRequisicao}
-              onClose={handleCloseEditModal}
-              onRequisicaoUpdated={fetchRequisicoes}
+          <>
+            {console.log('Selected Requisicao:', selectedRequisicao)}
+            <CadastrarCotacao
+              produto={selectedRequisicao.produto}
+              onCotacaoUpdated={handleCotacaoAdded}
+              onRequisicaoUpdated={handleRequisicaoUpdated}
+              requisicaoId={selectedRequisicao.id}
             />
-          )}
+          </>
+
           <CloseIcon
-            onClick={handleCloseEditModal}
+            onClick={() => dispatch({ type: 'FECHAR_CREATEMODAL' })}
             sx={{
               position: 'absolute',
               top: 15,
@@ -215,18 +320,16 @@ function Requisicoes({ isAdmin }) {
         </Modal>
       )}
 
-      {isAdmin && (
-        <Modal
-          open={confirmModalOpen}
-          onClose={handleCloseConfirmModal}
-          title="Confirmar Exclusão"
-          onConfirm={handleDelete}
-        >
-          <p className="modal-paragrafo">
-            Tem certeza que deseja excluir esta requisição?
-          </p>
-        </Modal>
-      )}
+      <Modal
+        open={abrirModalConfirm}
+        onClose={() => dispatch({ type: 'FECHAR_MODALCONFIRM' })}
+        title="Confirmar Exclusão"
+        onConfirm={handleDelete}
+      >
+        <p className="modal-paragrafo">
+          Tem certeza que deseja excluir esta requisição?
+        </p>
+      </Modal>
     </Container>
   );
 }

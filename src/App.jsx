@@ -9,12 +9,14 @@ import FornecedoresList from './pages/Fornecedores/FornecedoresList';
 import ContatoList from './pages/Contatos/ContatoList';
 import CotacoesList from './pages/Cotacoes/CotacoesList';
 import Home from './pages/Home';
+import Configuracoes from './pages/Configuracoes/Configuracoes';
 import Layout from './pages/Layout';
 import NotFound from './pages/NotFound';
-import Login from './components/login/Login';
-import CriarConta from './components/login/CriarConta';
+import Login from './pages/Login/Login';
+import CriarConta from './pages/Login/CriarConta';
 import ProtectedRoute from './components/ProtectedRoute';
 import Requisicoes from './pages/Requisicoes/RequisicoesList';
+import userForm from './pages/Configuracoes/UserForm';
 
 function App() {
   const [usuario, setUsuario] = useState(null);
@@ -22,7 +24,7 @@ function App() {
 
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const autenticacao = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUsuario(user);
         const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -38,7 +40,7 @@ function App() {
       }
     });
 
-    return () => unsubscribe();
+    return () => autenticacao();
   }, []);
 
   return (
@@ -48,7 +50,7 @@ function App() {
           path="/"
           element={<Layout usuario={usuario} setUsuario={setUsuario} />}
         >
-          <Route index element={<Home usuario={usuario} />} />
+          <Route index element={<Home usuario={usuario} isAdmin={isAdmin} />} />
           <Route
             path="produtos"
             element={
@@ -89,11 +91,53 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="configuracoes"
+            element={
+              <ProtectedRoute usuario={usuario}>
+                <Configuracoes
+                  usuario={usuario}
+                  setUsuario={setUsuario}
+                  isAdmin={isAdmin}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="userForm"
+            element={
+              <ProtectedRoute usuario={usuario}>
+                <userForm
+                  usuario={usuario}
+                  setUsuario={setUsuario}
+                  isAdmin={isAdmin}
+                />
+              </ProtectedRoute>
+            }
+          />
           <Route path="login" element={<Login setUsuario={setUsuario} />} />
           <Route
             path="criarConta"
             element={<CriarConta setUsuario={setUsuario} />}
           />
+          {/*
+          <Route
+            path="login"
+            element={
+              <ProtectedRoute usuario={!usuario}>
+                <Login setUsuario={setUsuario} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="criarConta"
+            element={
+              <ProtectedRoute usuario={!usuario}>
+                <CriarConta setUsuario={setUsuario} />
+              </ProtectedRoute>
+            }
+          />
+           */}
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

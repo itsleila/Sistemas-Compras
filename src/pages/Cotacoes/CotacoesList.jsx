@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { Container, Modal } from '../../components';
 import { DataTable } from '../../components';
 import { excluirCotacao, listarCotacoes } from './Cotacoes';
@@ -8,11 +8,42 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Tooltip from '@mui/material/Tooltip';
 
+const initialState = {
+  cotacoes: [],
+  abrirModalEdit: false,
+  abrirModalConfirm: false,
+  selectedCotacao: null,
+};
+
+function reducer(estado, acao) {
+  switch (acao.type) {
+    case 'COTACOES':
+      return { ...estado, cotacoes: acao.payload };
+    case 'ABRIR_MODALEDIT':
+      return {
+        ...estado,
+        abrirModalEdit: true,
+        selectedCotacao: acao.payload,
+      };
+    case 'FECHAR_MODALEDIT':
+      return { ...estado, abrirModalEdit: false, selectedCotacao: null };
+    case 'ABRIR_MODALCONFIRM':
+      return {
+        ...estado,
+        abrirModalConfirm: true,
+        selectedCotacao: acao.payload,
+      };
+    case 'FECHAR_MODALCONFIRM':
+      return { ...estado, abrirModalConfirm: false, selectedCotacao: null };
+    default:
+      return estado;
+  }
+}
+
 function Cotacoes({ isAdmin }) {
-  const [cotacoes, setCotacoes] = useState([]);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [selectedCotacao, setSelectedCotacao] = useState(null);
+  const [estado, dispatch] = useReducer(reducer, initialState);
+  const { cotacoes, abrirModalEdit, abrirModalConfirm, selectedCotacao } =
+    estado;
 
   useEffect(() => {
     fetchCotacoes();
@@ -20,34 +51,14 @@ function Cotacoes({ isAdmin }) {
 
   async function fetchCotacoes() {
     const cotacoesList = await listarCotacoes();
-    setCotacoes(cotacoesList);
+    dispatch({ type: 'COTACOES', payload: cotacoesList });
   }
-
-  const handleOpenEditModal = (cotacao) => {
-    setSelectedCotacao(cotacao);
-    setEditModalOpen(true);
-  };
-
-  const handleCloseEditModal = () => {
-    setEditModalOpen(false);
-    setSelectedCotacao(null);
-  };
-
-  const handleOpenConfirmModal = (cotacao) => {
-    setSelectedCotacao(cotacao);
-    setConfirmModalOpen(true);
-  };
-
-  const handleCloseConfirmModal = () => {
-    setConfirmModalOpen(false);
-    setSelectedCotacao(null);
-  };
 
   const handleDelete = async () => {
     if (selectedCotacao) {
       await excluirCotacao(selectedCotacao.id);
       fetchCotacoes();
-      handleCloseConfirmModal();
+      dispatch({ type: 'FECHAR_MODALCONFIRM' });
     }
   };
 
@@ -83,7 +94,9 @@ function Cotacoes({ isAdmin }) {
           >
             <EditIcon
               style={{ cursor: 'pointer', marginRight: '10px' }}
-              onClick={() => handleOpenEditModal(row)}
+              onClick={() =>
+                dispatch({ type: 'ABRIR_MODALEDIT', payload: row })
+              }
             />
           </Tooltip>
 
@@ -94,7 +107,9 @@ function Cotacoes({ isAdmin }) {
           >
             <DeleteIcon
               style={{ cursor: 'pointer' }}
-              onClick={() => handleOpenConfirmModal(row)}
+              onClick={() =>
+                dispatch({ type: 'ABRIR_MODALCONFIRM', payload: row })
+              }
             />
           </Tooltip>
         </div>
@@ -117,14 +132,14 @@ function Cotacoes({ isAdmin }) {
       {/* {isAdmin && <CotacoesForm onCotacaoAdded={fetchCotacoes} />}*/}
       {isAdmin && (
         <Modal
-          open={editModalOpen}
-          onClose={handleCloseEditModal}
+          open={abrirModalEdit}
+          onClose={() => dispatch({ type: 'FECHAR_MODALEDIT' })}
           title="Editar Cotações"
         >
           {selectedCotacao && (
             <CotacoesEdit
               cotacao={selectedCotacao}
-              onClose={handleCloseEditModal}
+              onClose={() => dispatch({ type: 'FECHAR_MODALEDIT' })}
               onCotacaoUpdated={fetchCotacoes}
             />
           )}
@@ -132,8 +147,8 @@ function Cotacoes({ isAdmin }) {
       )}
       {isAdmin && (
         <Modal
-          open={confirmModalOpen}
-          onClose={handleCloseConfirmModal}
+          open={abrirModalConfirm}
+          onClose={() => dispatch({ type: 'FECHAR_MODALCONFIRM' })}
           title="Confirmar Exclusão"
           onConfirm={handleDelete}
         >

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import { excluirContato, listarContatos } from './Contato';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -8,11 +8,42 @@ import { Container, Modal } from '../../components';
 import { DataTable } from '../../components';
 import { Tooltip } from '@mui/material';
 
+const initialState = {
+  contatos: [],
+  abrirModalEdit: false,
+  abrirModalConfirm: false,
+  selectedContato: null,
+};
+
+function reducer(estado, acao) {
+  switch (acao.type) {
+    case 'CONTATOS':
+      return { ...estado, contatos: acao.payload };
+    case 'ABRIR_MODALEDIT':
+      return {
+        ...estado,
+        abrirModalEdit: true,
+        selectedContato: acao.payload,
+      };
+    case 'FECHAR_MODALEDIT':
+      return { ...estado, abrirModalEdit: false, selectedContato: null };
+    case 'ABRIR_MODALCONFIRM':
+      return {
+        ...estado,
+        abrirModalConfirm: true,
+        selectedContato: acao.payload,
+      };
+    case 'FECHAR_MODALCONFIRM':
+      return { ...estado, abrirModalConfirm: false, selectedContato: null };
+    default:
+      return estado;
+  }
+}
+
 function ContatoList({ isAdmin }) {
-  const [contatos, setContatos] = useState([]);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [selectedContato, setSelectedContato] = useState(null);
+  const [estado, dispatch] = useReducer(reducer, initialState);
+  const { contatos, abrirModalEdit, abrirModalConfirm, selectedContato } =
+    estado;
 
   useEffect(() => {
     fetchContatos();
@@ -20,34 +51,14 @@ function ContatoList({ isAdmin }) {
 
   async function fetchContatos() {
     const contatosList = await listarContatos();
-    setContatos(contatosList);
+    dispatch({ type: 'CONTATOS', payload: contatosList });
   }
-
-  const handleOpenEditModal = (contato) => {
-    setSelectedContato(contato);
-    setEditModalOpen(true);
-  };
-
-  const handleCloseEditModal = (contato) => {
-    setEditModalOpen(false);
-    setSelectedContato(null);
-  };
-
-  const handleOpenConfirmModal = (contato) => {
-    setSelectedContato(contato);
-    setConfirmModalOpen(true);
-  };
-
-  const handleCloseConfirmModal = () => {
-    setConfirmModalOpen(false);
-    setSelectedContato(null);
-  };
 
   const handleDelete = async () => {
     if (selectedContato) {
       await excluirContato(selectedContato.id);
       fetchContatos();
-      handleCloseConfirmModal();
+      dispatch({ type: 'FECHAR_MODALCONFIRM' });
     }
   };
 
@@ -83,23 +94,27 @@ function ContatoList({ isAdmin }) {
         <div>
           <Tooltip
             title={
-              isAdmin ? 'editar' : 'Apenas adiminstradores podem modificar'
+              isAdmin ? 'Editar' : 'Apenas administradores podem modificar'
             }
           >
             <EditIcon
               style={{ cursor: 'pointer', marginRight: '10px' }}
-              onClick={() => handleOpenEditModal(row)}
+              onClick={() =>
+                dispatch({ type: 'ABRIR_MODALEDIT', payload: row })
+              }
             />
           </Tooltip>
 
           <Tooltip
             title={
-              isAdmin ? 'excluir' : 'Apenas adiminstradores podem modificar'
+              isAdmin ? 'Excluir' : 'Apenas administradores podem modificar'
             }
           >
             <DeleteIcon
               style={{ cursor: 'pointer' }}
-              onClick={() => handleOpenConfirmModal(row)}
+              onClick={() =>
+                dispatch({ type: 'ABRIR_MODALCONFIRM', payload: row })
+              }
             />
           </Tooltip>
         </div>
@@ -122,31 +137,34 @@ function ContatoList({ isAdmin }) {
 
       {isAdmin && (
         <Modal
-          open={editModalOpen}
-          onClose={handleCloseEditModal}
+          open={abrirModalEdit}
+          onClose={() => dispatch({ type: 'FECHAR_MODALEDIT' })}
           title="Editar Contato"
         >
           {selectedContato && (
             <ContatosEdit
               contato={selectedContato}
-              onClose={handleCloseEditModal}
+              onClose={() => dispatch({ type: 'FECHAR_MODALEDIT' })}
               onContatoUpdated={fetchContatos}
             />
           )}
         </Modal>
       )}
+
       {isAdmin && (
         <Modal
-          open={confirmModalOpen}
-          onClose={handleCloseConfirmModal}
+          open={abrirModalConfirm}
+          onClose={() => dispatch({ type: 'FECHAR_MODALCONFIRM' })}
           title="Confirma Exclusão"
           onConfirm={handleDelete}
         >
           <p>Tem certeza que deseja excluir este contato?</p>
         </Modal>
       )}
+
       {isAdmin && <ContatoForm onContatoAdded={fetchContatos} />}
     </Container>
   );
 }
+
 export default ContatoList;

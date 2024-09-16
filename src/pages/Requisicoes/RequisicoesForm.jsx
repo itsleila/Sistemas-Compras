@@ -124,7 +124,7 @@ function RequisicoesForm({ onRequisicaoAdded }) {
             Justificativa
           </label>
           <textarea
-            id="descricao"
+            id="justificativa"
             placeholder="Escreva sua justificativa para a necessidade desse produto"
             rows={4}
             className="input-Registerform"

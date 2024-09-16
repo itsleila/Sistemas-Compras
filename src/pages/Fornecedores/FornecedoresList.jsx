@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { Container } from '../../components';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -9,11 +9,46 @@ import FornecedoresEditar from './FornecedoresEditar';
 import Modal from '../../components/Modal';
 import { Tooltip } from '@mui/material';
 
+const initialState = {
+  fornecedores: [],
+  abrirModalEdit: false,
+  abrirModalConfirm: false,
+  selectedFornecedor: null,
+};
+
+function reducer(estado, acao) {
+  switch (acao.type) {
+    case 'FORNECEDORES':
+      return { ...estado, fornecedores: acao.payload };
+    case 'ABRIR_MODALEDIT':
+      return {
+        ...estado,
+        abrirModalEdit: true,
+        selectedFornecedor: acao.payload,
+      };
+    case 'FECHAR_MODALEDIT':
+      return { ...estado, abrirModalEdit: false, selectedFornecedor: null };
+    case 'ABRIR_MODALCONFIRM':
+      return {
+        ...estado,
+        abrirModalConfirm: true,
+        selectedFornecedor: acao.payload,
+      };
+    case 'FECHAR_MODALCONFIRM':
+      return { ...estado, abrirModalConfirm: false, selectedFornecedor: null };
+    default:
+      return estado;
+  }
+}
+
 function Fornecedores({ isAdmin }) {
-  const [fornecedores, setFornecedores] = useState([]);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [selectedFornecedor, setSelectedFornecedor] = useState(null);
+  const [estado, dispatch] = useReducer(reducer, initialState);
+  const {
+    fornecedores,
+    abrirModalEdit,
+    abrirModalConfirm,
+    selectedFornecedor,
+  } = estado;
 
   useEffect(() => {
     fetchFornecedores();
@@ -21,34 +56,14 @@ function Fornecedores({ isAdmin }) {
 
   async function fetchFornecedores() {
     const fornecedoresList = await listarFornecedores();
-    setFornecedores(fornecedoresList);
+    dispatch({ type: 'FORNECEDORES', payload: fornecedoresList });
   }
-
-  const handleOpenEditModal = (fornecedor) => {
-    setSelectedFornecedor(fornecedor);
-    setEditModalOpen(true);
-  };
-
-  const handleCloseEditModal = () => {
-    setEditModalOpen(false);
-    setSelectedFornecedor(null);
-  };
-
-  const handleOpenConfirmModal = (fornecedor) => {
-    setSelectedFornecedor(fornecedor);
-    setConfirmModalOpen(true);
-  };
-
-  const handleCloseConfirmModal = () => {
-    setConfirmModalOpen(false);
-    setSelectedFornecedor(null);
-  };
 
   const handleDelete = async () => {
     if (selectedFornecedor) {
       await excluirFornecedor(selectedFornecedor.id);
       fetchFornecedores();
-      handleCloseConfirmModal();
+      dispatch({ type: 'FECHAR_MODALCONFIRM' });
     }
   };
 
@@ -79,7 +94,9 @@ function Fornecedores({ isAdmin }) {
           >
             <EditIcon
               style={{ cursor: 'pointer', marginRight: '10px' }}
-              onClick={() => handleOpenEditModal(row)}
+              onClick={() =>
+                dispatch({ type: 'ABRIR_MODALEDIT', payload: row })
+              }
             />
           </Tooltip>
 
@@ -90,7 +107,9 @@ function Fornecedores({ isAdmin }) {
           >
             <DeleteIcon
               style={{ cursor: 'pointer' }}
-              onClick={() => handleOpenConfirmModal(row)}
+              onClick={() =>
+                dispatch({ type: 'ABRIR_MODALCONFIRM', payload: row })
+              }
             />
           </Tooltip>
         </div>
@@ -119,14 +138,14 @@ function Fornecedores({ isAdmin }) {
 
       {isAdmin && (
         <Modal
-          open={editModalOpen}
-          onClose={handleCloseEditModal}
+          open={abrirModalEdit}
+          onClose={() => dispatch({ type: 'FECHAR_MODALEDIT' })}
           title="Editar Fornecedor"
         >
           {selectedFornecedor && (
             <FornecedoresEditar
               fornecedor={selectedFornecedor}
-              onClose={handleCloseEditModal}
+              onClose={() => dispatch({ type: 'FECHAR_MODALEDIT' })}
               onFornecedorUpdated={fetchFornecedores}
             />
           )}
@@ -135,9 +154,9 @@ function Fornecedores({ isAdmin }) {
 
       {isAdmin && (
         <Modal
-          open={confirmModalOpen}
-          onClose={handleCloseConfirmModal}
-          title="Confirmar Exclusão"
+          open={abrirModalConfirm}
+          onClose={() => dispatch({ type: 'FECHAR_MODALCONFIRM' })}
+          title="Confirma Exclusão"
           onConfirm={handleDelete}
         >
           <p className="modal-paragrafo">

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../infra/firebase';
-import { Button } from '../index';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { auth, db } from '../../infra/firebase';
+import { Button } from '../../components';
+import { doc, getDoc } from 'firebase/firestore';
 
 const Login = ({ setUsuario }) => {
   const [email, setEmail] = useState('');
@@ -20,19 +21,33 @@ const Login = ({ setUsuario }) => {
         email,
         senha,
       );
-      const usuario = {
-        id: userCredential.user.uid,
-        email: userCredential.user.email,
-      };
-      setUsuario(usuario);
-      setSuccessMessage('Login realizado com sucesso!');
-      setEmail('');
-      setSenha('');
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
+      const user = userCredential.user;
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        if (userData.isBlocked) {
+          await signOut(auth);
+          setError('Sua conta está bloqueada. Entre em contato com o suporte.');
+        } else {
+          const usuario = {
+            id: user.uid,
+            email: user.email,
+          };
+          setUsuario(usuario);
+          setSuccessMessage('Login realizado com sucesso!');
+          setEmail('');
+          setSenha('');
+          setTimeout(() => {
+            navigate('/');
+          }, 2000);
+        }
+      } else {
+        setError('Não foi possível encontrar os dados do usuário.');
+      }
     } catch (error) {
-      console.log('Erro no login:', error);
+      console.error('Erro no login:', error);
       if (
         error.code === 'auth/invalid-email' ||
         error.code === 'auth/invalid-credential'

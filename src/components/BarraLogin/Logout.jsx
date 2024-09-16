@@ -11,7 +11,6 @@ const Logout = ({ usuario, setUsuario }) => {
       <p>
         <b>Usuario:</b>{' '}
         <span className="italic underline underline-offset-8">
-          {' '}
           {usuario?.email}
         </span>
         <Button

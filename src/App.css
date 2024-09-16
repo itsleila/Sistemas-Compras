@@ -23,6 +23,11 @@ li {
 
 img {
   max-width: 100%;
+} 
+
+@media (min-width:480px) {
+
+  
 }
 
 .header-div {

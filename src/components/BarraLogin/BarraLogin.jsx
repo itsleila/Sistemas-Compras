@@ -3,7 +3,12 @@ import { Link } from 'react-router-dom';
 import { Button } from '../index';
 import Logout from './Logout';
 
-function DefaultBarraLogin({ usuario, setUsuario, buttonSize = 'small' }) {
+function DefaultBarraLogin({
+  usuario,
+  setUsuario,
+  buttonSize = 'small',
+  variant = 'contained',
+}) {
   if (usuario) {
     return <Logout usuario={usuario} setUsuario={setUsuario} />;
   } else {
@@ -14,6 +19,7 @@ function DefaultBarraLogin({ usuario, setUsuario, buttonSize = 'small' }) {
             text="Fazer Login"
             size={buttonSize}
             color="blueRibbon"
+            variant={variant}
             sx={{ marginRight: 2 }}
           />
         </Link>

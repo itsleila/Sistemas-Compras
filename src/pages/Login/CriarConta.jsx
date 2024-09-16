@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '../index';
+import { Button } from '../../components';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../infra/firebase';
+import { auth, db } from '../../infra/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 const CriarConta = ({ setUsuario }) => {
   const [email, setEmail] = useState('');
@@ -28,10 +29,16 @@ const CriarConta = ({ setUsuario }) => {
         email,
         senha,
       );
+      const user = userCredential.user;
       const usuario = {
-        id: userCredential.user.uid,
-        email: userCredential.user.email,
+        id: user.uid,
+        email: user.email,
       };
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        email: user.email,
+      });
+
       setUsuario(usuario);
       setEmail('');
       setSenha('');
@@ -77,7 +84,7 @@ const CriarConta = ({ setUsuario }) => {
                 Senha
               </label>
               <input
-                className="input-form mb-3 "
+                className="input-form mb-3"
                 id="grid-password"
                 type="password"
                 placeholder="******************"
@@ -90,7 +97,7 @@ const CriarConta = ({ setUsuario }) => {
                 Confirme a Senha
               </label>
               <input
-                className="input-form mb-3 "
+                className="input-form mb-3"
                 id="grid-password-confirm"
                 type="password"
                 placeholder="******************"

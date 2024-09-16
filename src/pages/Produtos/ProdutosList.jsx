@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { Container, Modal } from '../../components';
 import { DataTable } from '../../components';
 import { excluirProduto, listarProdutos } from './Produtos';
@@ -8,11 +8,42 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ProdutosEdit from './ProdutosEdit';
 import { Tooltip } from '@mui/material';
 
+const initialState = {
+  produtos: [],
+  abrirModalEdit: false,
+  abrirModalConfirm: false,
+  selectedProduto: null,
+};
+
+function reducer(estado, acao) {
+  switch (acao.type) {
+    case 'PRODUTOS':
+      return { ...estado, produtos: acao.payload };
+    case 'ABRIR_MODALEDIT':
+      return {
+        ...estado,
+        abrirModalEdit: true,
+        selectedProduto: acao.payload,
+      };
+    case 'FECHAR_MODALEDIT':
+      return { ...estado, abrirModalEdit: false, selectedProduto: null };
+    case 'ABRIR_MODALCONFIRM':
+      return {
+        ...estado,
+        abrirModalConfirm: true,
+        selectedProduto: acao.payload,
+      };
+    case 'FECHAR_MODALCONFIRM':
+      return { ...estado, abrirModalConfirm: false, selectedProduto: null };
+    default:
+      return estado;
+  }
+}
+
 function Produtos({ isAdmin }) {
-  const [produtos, setProdutos] = useState([]);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [selectedProduto, setSelectedProduto] = useState(null);
+  const [estado, dispatch] = useReducer(reducer, initialState);
+  const { produtos, abrirModalEdit, abrirModalConfirm, selectedProduto } =
+    estado;
 
   useEffect(() => {
     fetchProdutos();
@@ -20,34 +51,14 @@ function Produtos({ isAdmin }) {
 
   async function fetchProdutos() {
     const produtosList = await listarProdutos();
-    setProdutos(produtosList);
+    dispatch({ type: 'PRODUTOS', payload: produtosList });
   }
-
-  const handleOpenEditModal = (produto) => {
-    setSelectedProduto(produto);
-    setEditModalOpen(true);
-  };
-
-  const handleCloseEditModal = () => {
-    setEditModalOpen(false);
-    setSelectedProduto(null);
-  };
-
-  const handleOpenConfirmModal = (produto) => {
-    setSelectedProduto(produto);
-    setConfirmModalOpen(true);
-  };
-
-  const handleCloseConfirmModal = () => {
-    setConfirmModalOpen(false);
-    setSelectedProduto(null);
-  };
 
   const handleDelete = async () => {
     if (selectedProduto) {
       await excluirProduto(selectedProduto.id);
       fetchProdutos();
-      handleCloseConfirmModal();
+      dispatch({ type: 'FECHAR_MODALCONFIRM' });
     }
   };
 
@@ -88,7 +99,9 @@ function Produtos({ isAdmin }) {
           >
             <EditIcon
               style={{ cursor: 'pointer', marginRight: '10px' }}
-              onClick={() => handleOpenEditModal(row)}
+              onClick={() =>
+                dispatch({ type: 'ABRIR_MODALEDIT', payload: row })
+              }
             />
           </Tooltip>
 
@@ -99,7 +112,9 @@ function Produtos({ isAdmin }) {
           >
             <DeleteIcon
               style={{ cursor: 'pointer' }}
-              onClick={() => handleOpenConfirmModal(row)}
+              onClick={() =>
+                dispatch({ type: 'ABRIR_MODALCONFIRM', payload: row })
+              }
             />
           </Tooltip>
         </div>
@@ -119,14 +134,14 @@ function Produtos({ isAdmin }) {
       <DataTable columns={columns} data={produtos} pagination />
       {isAdmin && (
         <Modal
-          open={editModalOpen}
-          onClose={handleCloseEditModal}
+          open={abrirModalEdit}
+          onClose={() => dispatch({ type: 'FECHAR_MODALEDIT' })}
           title="Editar Produto"
         >
           {selectedProduto && (
             <ProdutosEdit
               produto={selectedProduto}
-              onClose={handleCloseEditModal}
+              onClose={() => dispatch({ type: 'FECHAR_MODALEDIT' })}
               onProdutoUpdated={fetchProdutos}
             />
           )}
@@ -134,8 +149,8 @@ function Produtos({ isAdmin }) {
       )}
       {isAdmin && (
         <Modal
-          open={confirmModalOpen}
-          onClose={handleCloseConfirmModal}
+          open={abrirModalConfirm}
+          onClose={() => dispatch({ type: 'FECHAR_MODALCONFIRM' })}
           title="Confirmar Exclusão"
           onConfirm={handleDelete}
         >

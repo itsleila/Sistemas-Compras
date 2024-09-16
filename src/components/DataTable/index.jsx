@@ -39,7 +39,7 @@ const opcoes = {
   rangeSeparatorText: 'de',
 };
 
-const DefaultDataTable = ({ title, columns, data, conditionalRowStyles }) => {
+const DefaultDataTable = ({ title, columns, data }) => {
   const [filterText, setFilterText] = useState('');
   const [filteredData, setFilteredData] = useState(data);
 
@@ -85,7 +85,6 @@ const DefaultDataTable = ({ title, columns, data, conditionalRowStyles }) => {
         paginationComponentOptions={opcoes}
         pagination
         paginationPerPage={5}
-        conditionalRowStyles={conditionalRowStyles}
       />
     </div>
   );

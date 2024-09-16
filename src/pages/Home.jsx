@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom';
 import { BarraLogin, Container } from '../components';
 import FeedCarrosel from './FeedCarrosel';
 
-function Home({ usuario }) {
+function Home({ usuario, isAdmin }) {
   return (
     <>
       <main>
-        {usuario && (
-          <nav>
+        <nav>
+          {usuario && (
             <ul className="nav-div">
               <li>
                 <Link to={'/requisicoes'} className="nav-link">
@@ -20,25 +20,36 @@ function Home({ usuario }) {
                   Cotações
                 </Link>
               </li>
+              {isAdmin && (
+                <>
+                  <li>
+                    <Link to={'/produtos'} className="nav-link">
+                      Produtos
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to={'/fornecedores'} className="nav-link">
+                      Fornecedores
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to={'/contatos'} className="nav-link">
+                      Contatos
+                    </Link>
+                  </li>
+                </>
+              )}
               <li>
-                <Link to={'/produtos'} className="nav-link">
-                  Produtos
-                </Link>
-              </li>
-              <li>
-                <Link to={'/fornecedores'} className="nav-link">
-                  Fornecedores
-                </Link>
-              </li>
-              <li>
-                <Link to={'/contatos'} className="nav-link">
-                  Contatos
+                <Link to={'/configuracoes'} className="nav-link">
+                  Configurações
                 </Link>
               </li>
             </ul>
-          </nav>
-        )}
+          )}
+        </nav>
+
         {!usuario && <hr className="bg-blue-ribbon h-0.5" />}
+
         <Container
           maxWidth="lg"
           sx={{
@@ -64,11 +75,6 @@ function Home({ usuario }) {
           {!usuario && (
             <div className=" text-center my-5 py-3">
               <BarraLogin buttonSize="meddium" />
-            </div>
-          )}
-          {usuario && (
-            <div className="my-20">
-              <FeedCarrosel />
             </div>
           )}
         </Container>

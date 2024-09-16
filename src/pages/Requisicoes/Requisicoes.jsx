@@ -11,21 +11,22 @@ import { db } from '../../infra/firebase';
 
 export async function inserirRequisicoes(novoRequisicoes) {
   const docRef = await addDoc(collection(db, 'requisicoes'), novoRequisicoes);
-  return docRef.id;
+  return { id: docRef.id, ...novoRequisicoes };
 }
 
 export async function listarRequisicoes() {
-  let retorno;
-  await getDocs(collection(db, 'requisicoes')).then((querySnapshot) => {
-    retorno = querySnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
-  });
-  return retorno;
+  const querySnapshot = await getDocs(collection(db, 'requisicoes'));
+  return querySnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
 }
 
 export async function obterRequisicao(id) {
   const docRef = doc(db, 'requisicoes', id);
   const docSnap = await getDoc(docRef);
-  return docSnap.data();
+  if (docSnap.exists()) {
+    return { ...docSnap.data(), id: doc.id };
+  } else {
+    return null;
+  }
 }
 
 export async function excluirRequisicao(id) {
