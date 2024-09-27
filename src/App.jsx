@@ -115,12 +115,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="login" element={<Login setUsuario={setUsuario} />} />
-          <Route
-            path="criarConta"
-            element={<CriarConta setUsuario={setUsuario} />}
-          />
-          {/*
           <Route
             path="login"
             element={
@@ -137,7 +131,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-           */}
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

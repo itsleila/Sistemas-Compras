@@ -5,18 +5,36 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
   updateDoc,
+  where,
 } from 'firebase/firestore';
-import { db } from '../../infra/firebase';
+import { auth, db } from '../../infra/firebase';
 
 export async function inserirRequisicoes(novoRequisicoes) {
-  const docRef = await addDoc(collection(db, 'requisicoes'), novoRequisicoes);
-  return { id: docRef.id, ...novoRequisicoes };
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Usuário não autenticado.');
+  }
+  const requisicaoComUid = { ...novoRequisicoes, userUid: user.uid };
+  const docRef = await addDoc(collection(db, 'requisicoes'), requisicaoComUid);
+  return { id: docRef.id, ...requisicaoComUid };
 }
 
-export async function listarRequisicoes() {
-  const querySnapshot = await getDocs(collection(db, 'requisicoes'));
-  return querySnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+export async function listarRequisicoes(userUid = null) {
+  let requisicoesRef = collection(db, 'requisicoes');
+
+  if (userUid) {
+    const requisicoesQuery = query(
+      requisicoesRef,
+      where('userUid', '==', userUid),
+    );
+    const querySnapshot = await getDocs(requisicoesQuery);
+    return querySnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+  } else {
+    const querySnapshot = await getDocs(requisicoesRef);
+    return querySnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+  }
 }
 
 export async function obterRequisicao(id) {

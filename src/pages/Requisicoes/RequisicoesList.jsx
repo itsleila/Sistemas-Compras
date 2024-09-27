@@ -11,6 +11,7 @@ import { RequisicoesCotacao, CadastrarCotacao } from './RequisicoesEdit';
 import { excluirRequisicao, listarRequisicoes } from './Requisicoes';
 import { listarCotacoes } from '../Cotacoes/Cotacoes';
 import Tooltip from '@mui/material/Tooltip';
+import { auth } from '../../infra/firebase';
 
 const initialState = {
   requisicoes: [],
@@ -74,10 +75,20 @@ function Requisicoes({ isAdmin }) {
   } = estado;
 
   const fetchData = async () => {
-    const [requisicoesList, cotacoesList] = await Promise.all([
-      listarRequisicoes(),
-      listarCotacoes(),
-    ]);
+    let requisicoesList = [];
+
+    if (isAdmin) {
+      requisicoesList = await listarRequisicoes();
+    } else {
+      const user = auth.currentUser;
+      if (user) {
+        requisicoesList = await listarRequisicoes(user.uid);
+      } else {
+        console.error('Usuário não autenticado.');
+      }
+    }
+
+    const cotacoesList = await listarCotacoes();
     dispatch({ type: 'REQUISICOES', payload: requisicoesList });
     setCotacoes(cotacoesList);
   };
@@ -299,13 +310,14 @@ function Requisicoes({ isAdmin }) {
           onClose={() => dispatch({ type: 'FECHAR_CREATEMODAL' })}
         >
           <>
-            {console.log('Selected Requisicao:', selectedRequisicao)}
-            <CadastrarCotacao
-              produto={selectedRequisicao.produto}
-              onCotacaoUpdated={handleCotacaoAdded}
-              onRequisicaoUpdated={handleRequisicaoUpdated}
-              requisicaoId={selectedRequisicao.id}
-            />
+            {selectedRequisicao && (
+              <CadastrarCotacao
+                produto={selectedRequisicao.produto}
+                onCotacaoUpdated={handleCotacaoAdded}
+                onRequisicaoUpdated={handleRequisicaoUpdated}
+                requisicaoId={selectedRequisicao.id}
+              />
+            )}
           </>
 
           <CloseIcon
