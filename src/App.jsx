@@ -16,7 +16,7 @@ import Login from './pages/Login/Login';
 import CriarConta from './pages/Login/CriarConta';
 import ProtectedRoute from './components/ProtectedRoute';
 import Requisicoes from './pages/Requisicoes/RequisicoesList';
-import userForm from './pages/Configuracoes/UserForm';
+import UserForm from './pages/Configuracoes/UserForm';
 
 function App() {
   const [usuario, setUsuario] = useState(null);
@@ -107,7 +107,7 @@ function App() {
             path="userForm"
             element={
               <ProtectedRoute usuario={usuario}>
-                <userForm
+                <UserForm
                   usuario={usuario}
                   setUsuario={setUsuario}
                   isAdmin={isAdmin}
